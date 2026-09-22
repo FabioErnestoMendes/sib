@@ -130,26 +130,16 @@ class Dataset:
     def from_dataframe(cls, df: pd.DataFrame, label: str = None):
         """
         Creates a Dataset object from a pandas DataFrame
-
-        Parameters
-        ----------
-        df: pandas.DataFrame
-            The DataFrame
-        label: str
-            The label name
-
-        Returns
-        -------
-        Dataset
         """
         if label:
             X = df.drop(label, axis=1).to_numpy()
             y = df[label].to_numpy()
+            features = df.drop(label, axis=1).columns.tolist()
         else:
             X = df.to_numpy()
             y = None
+            features = df.columns.tolist()
 
-        features = df.columns.tolist()
         return cls(X, y, features=features, label=label)
 
     def to_dataframe(self) -> pd.DataFrame:
