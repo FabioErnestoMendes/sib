@@ -1,12 +1,21 @@
-from abc import ABCMeta, abstractmethod
 
+from abc import abstractmethod
 import numpy as np
 
 
-class Layer(metaclass=ABCMeta):
+class Layer:
+
+    def __init__(self):
+        self.input = None
+        self.output = None
+        self.input_shape = None
 
     @abstractmethod
-    def forward_propagation(self, input, training=False):
+    def forward_propagation(self, input, training):
+        raise NotImplementedError
+
+    @abstractmethod
+    def backward_propagation(self, output_error):
         raise NotImplementedError
 
     @abstractmethod
@@ -17,78 +26,47 @@ class Layer(metaclass=ABCMeta):
     def parameters(self):
         raise NotImplementedError
 
-    def set_input_shape(self, input_shape):
-        self._input_shape = input_shape
 
-    def input_shape(self):
-        return self._input_shape
+class Dropout(Layer):
 
-    def layer_name(self):
-        return self.__class__.__name__
+    def __init__(self, probability):
+        super().__init__()
 
+        if not 0 <= probability < 1:
+            raise ValueError(
+                "probability must be between 0 and 1"
+            )
 
-class DenseLayer(Layer):
-
-    def __init__(self, n_units, input_shape=None):
-        self.n_units = n_units
-        self._input_shape = input_shape
-
-        self.input = None
-        self.output = None
-        self.weights = None
-        self.biases = None
-
-    def initialize(self):
-        # Número de características de entrada
-        n_features = self._input_shape[0]
-
-        # Pesos aleatórios em [-0.5, 0.5[
-        self.weights = np.random.rand(
-            n_features, self.n_units
-        ) - 0.5
-
-        # Biases inicializados a zero
-        self.biases = np.zeros((1, self.n_units))
-
-        return self
-
-    def parameters(self):
-        # Número total de pesos e biases
-        return self.weights.size + self.biases.size
+        self.probability = probability
+        self.mask = None
 
     def forward_propagation(self, input, training=False):
-        # Guardar a entrada da camada
         self.input = input
 
-        # Calcular a saída: Y = XW + b
-        self.output = np.dot(self.input, self.weights) + self.biases
+        if training:
+            scaling_factor = 1 / (1 - self.probability)
+
+            self.mask = np.random.binomial(
+                1,
+                1 - self.probability,
+                size=input.shape
+            )
+
+            self.output = (
+                input * self.mask * scaling_factor
+            )
+
+        else:
+            self.mask = np.ones_like(input)
+            self.output = input
 
         return self.output
 
+    def backward_propagation(self, output_error):
+        return output_error * self.mask
+
     def output_shape(self):
-        return (self.n_units,)
+        return self.input_shape
 
-
-if __name__ == "__main__":
-
-    # Camada com 3 características de entrada e 4 neurónios
-    layer = DenseLayer(4, (3,)).initialize()
-
-    # 10 amostras, cada uma com 3 características
-    X = np.random.rand(10, 3)
-
-    # Calcular a saída
-    out = layer.forward_propagation(X)
-
-    # Testes
-    assert out.shape == (10, 4)
-    assert layer.parameters() == 3 * 4 + 4
-    assert layer.output_shape() == (4,)
-
-    print("Todos os testes passaram!")
-    print("Nome da camada:", layer.layer_name())
-    print("Forma da entrada:", layer.input_shape())
-    print("Forma dos pesos:", layer.weights.shape)
-    print("Forma dos biases:", layer.biases.shape)
-    print("Forma da saída:", out.shape)
-    print("Número de parâmetros:", layer.parameters())
+    def parameters(self):
+        return 0

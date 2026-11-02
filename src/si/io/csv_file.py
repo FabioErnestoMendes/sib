@@ -9,28 +9,6 @@ def read_csv(
     features=True,
     label=True
 ):
-    """
-    Reads a CSV file and returns a Dataset object.
-
-    Parameters
-    ----------
-    filename : str
-        Name or path of the file.
-
-    sep : str
-        Value separator.
-
-    features : bool
-        Whether the file contains feature names.
-
-    label : bool
-        Whether the last column is the label.
-
-    Returns
-    -------
-    Dataset
-        The loaded dataset.
-    """
 
     if features:
         data = pd.read_csv(
@@ -78,9 +56,6 @@ def write_csv(
     features=True,
     label=True
 ):
-    """
-    Writes a Dataset object to a CSV file.
-    """
 
     data = dataset.to_dataframe()
 
