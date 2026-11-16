@@ -8,11 +8,10 @@ class DenseLayer(Layer):
     """Camada totalmente ligada (fully connected)."""
 
     def __init__(self, n_units, input_shape=None):
-        self.n_units = n_units
-        self._input_shape = input_shape
+        super().__init__(input_shape)
 
-        self.input = None
-        self.output = None
+        self.n_units = n_units
+
         self.weights = None
         self.biases = None
 
@@ -25,7 +24,7 @@ class DenseLayer(Layer):
                 "Define o input_shape antes de inicializar a DenseLayer."
             )
 
-        n_features = self._input_shape[0]
+        n_features = int(np.prod(self._input_shape))
 
         self.weights = np.random.rand(n_features, self.n_units) - 0.5
         self.biases = np.zeros((1, self.n_units))
@@ -68,9 +67,6 @@ class DenseLayer(Layer):
         self.biases = self.b_opt.update(self.biases, bias_error)
 
         return input_error
-
-    def output_shape(self):
-        return (self.n_units,)
 
 
 class NoUpdate:
